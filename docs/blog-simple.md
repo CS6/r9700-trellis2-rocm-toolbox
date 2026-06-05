@@ -6,7 +6,7 @@ R9700 的硬體規格看起來很適合做本地 AI Lab，但 ROCm、RDNA4、3D 
 
 ## 為什麼要另外整理一包
 
-我測的是 TRELLIS.2 的 ROCm fork。模型本身可以跑，問題主要卡在高品質輸出時的貼圖與 mesh 後處理。
+我測的是 [TRELLIS.2 的 ROCm fork](https://github.com/Cardboard-box-a/TRELLIS.2_rocm)。模型本身可以跑，問題主要卡在高品質輸出時的貼圖與 mesh 後處理。
 
 原本的 textured GLB export 會走 GPU BVH 路徑，其中有一段 `cumesh.cuBVH.unsigned_distance()`。在 R9700 / gfx1201 的 ROCm 環境下，這段有機會讓 HIP 進入 illegal state。不是模型完全不能跑，而是輸出流程跑到這裡會炸。
 
