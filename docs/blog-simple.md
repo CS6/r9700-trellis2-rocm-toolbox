@@ -76,6 +76,59 @@ CPU KDTree projection: querying 8,331,054 points
 
 它要處理 833 萬個 texture points。換句話說，4096 貼圖解析度主要就是卡在這裡。CPU KDTree fallback 可以避開 ROCm GPU BVH 的問題，但代價就是 texture baking 會變成 CPU 工作。
 
+## 測試紀錄：71GM 4096 版
+
+這張圖比 robot 那張更複雜。角色本體之外還有文字、標誌、細線裝飾和透明邊界，對 image-to-3D 來說比較像壓力測試。
+
+設定一樣維持最高品質路徑：
+
+```text
+texture_size=4096
+decimation_target=1000000
+remesh=False
+OVOXEL_PROJECTION_MODE=cpu_kdtree
+OVOXEL_CPU_KDTREE_K=8
+```
+
+輸出結果：
+
+```text
+GLB size: 約 44MB
+final mesh: 881,843 vertices / 960,011 faces
+valid texture pixels: 7,691,412
+CPU projection mean distance: 3.448e-05
+CPU projection max distance: 0.003243
+GLB check: geometry=1, material=PBRMaterial, has UV
+```
+
+這次 71GM 4096 版總時間是 654.08 秒，約 10 分 54 秒。
+
+時間拆開看：
+
+| 階段 | 時間 | 備註 |
+| --- | ---: | --- |
+| 啟動 / 載入 pipeline + 模型生成 / decode | 約 7 分 21 秒 | 從開始執行到 `to_glb` 開始前 |
+| GLB 匯出總時間 | 約 3 分 21 秒 | 23:09:19 開始 `to_glb`，23:12:40 完成 |
+| UV unwrap / raster / texture baking 前段 | 約 48 秒 | 23:09:19 到 23:10:07 |
+| CPU KDTree projection 本身 | 約 2 分 20 秒 | 23:10:07 開始，23:12:27 完成 |
+| finalizing / export 收尾 | 約 13 秒 | 23:12:27 到 23:12:40 |
+
+最耗時的 CPU fallback 段是：
+
+```text
+CPU KDTree projection: querying 7691412 points  k=8
+```
+
+這次有效 texture points 是 769 萬，比 robot 那張少一點。不過前面的模型生成段比較慢，應該和輸入圖的細節、文字和周邊裝飾有關。
+
+這次 log 裡有一個需要複查的警告：
+
+```text
+100.0% of grid sample coords are out of [-1,1] — expect clamped/wrong texture!
+```
+
+GLB 有正常輸出，也有 PBR material 和 UV，但這個警告表示貼圖取樣座標可能被 clamp。這種情況下，不能只看「有沒有產生 GLB」，還要打開模型檢查貼圖是否跑位、髒掉或被錯誤取樣。
+
 ## 使用方式
 
 先 build 容器：
