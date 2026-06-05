@@ -1,0 +1,11 @@
+--- a/trellis2/modules/sparse/conv/conv_flex_gemm.py
++++ b/trellis2/modules/sparse/conv/conv_flex_gemm.py
+@@ -91,7 +91,7 @@ def sparse_conv3d_forward(self, x: SparseTensor) -> SparseTensor:
+                 int(config.FLEX_GEMM_HASHMAP_RATIO * N),
+                 x.feats.device,
+             )
+-            neighbor_map = flex_kernels.cuda.hashmap_build_submanifold_conv_neighbour_map_cuda(
++            neighbor_map = flex_kernels.cuda.hashmap_build_submanifold_conv_neighbour_map(
+                 hashmap_keys, hashmap_vals,
+                 x.coords,
+                 x.spatial_shape[0], x.spatial_shape[1], x.spatial_shape[2],

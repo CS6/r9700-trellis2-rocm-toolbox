@@ -1,0 +1,22 @@
+This patch documents the local ROCm workaround applied to
+`site-packages/o_voxel/postprocess.py`.
+
+Summary:
+
+1. Add a CPU closest-point helper based on SciPy `cKDTree`.
+2. Skip GPU `cumesh.cuBVH` construction when `OVOXEL_PROJECTION_MODE=cpu_kdtree`
+   and `remesh=False`.
+3. During texture baking, replace `bvh.unsigned_distance()` with CPU KDTree
+   projection when `OVOXEL_PROJECTION_MODE=cpu_kdtree`.
+
+The automated application is implemented in:
+
+```text
+scripts/apply-runtime-patches.sh
+```
+
+Reason:
+
+`cumesh.cuBVH.unsigned_distance()` may fail on ROCm/gfx1201 with
+`hipErrorIllegalState`. The CPU fallback is slower but allows textured GLB export
+without using the unstable GPU distance kernel.

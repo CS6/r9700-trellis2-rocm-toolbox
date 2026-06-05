@@ -1,0 +1,17 @@
+.env
+.env.*
+*.token
+*.key
+*.pem
+*.log
+*.glb
+*.zip
+*.tar
+*.tar.gz
+*.tar.zst
+models/
+outputs/
+web-jobs/
+tmp/
+__pycache__/
+.DS_Store
